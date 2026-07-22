@@ -1,146 +1,162 @@
+// ==================== 1. NAVEGACIÓN SPA ====================
+function cambiarVista(vistaDestino) {
+    // Ocultar todas las vistas y desactivar botones
+    document.querySelectorAll('.vista').forEach(v => v.classList.remove('activa'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('activo'));
+
+    // Mostrar la vista seleccionada
+    document.getElementById('vista-' + vistaDestino).classList.add('activa');
+
+    // Activar el botón correspondiente
+    if (vistaDestino === 'simulador') {
+        document.getElementById('btnNavSimulador').classList.add('activo');
+    } else {
+        document.getElementById('btnNavTeoria').classList.add('activo');
+    }
+}
+
+// ==================== 2. GRÁFICO (Chart.js) ====================
+const ctxChart = document.getElementById('graficoVelocidad').getContext('2d');
+let arrayTiempo = Array.from({ length: 50 }, (_, i) => i);
+let arrayVelA = Array(50).fill(0);
+let arrayVelB = Array(50).fill(0);
+
+const grafica = new Chart(ctxChart, {
+    type: 'line',
+    data: {
+        labels: arrayTiempo,
+        datasets: [
+            { label: 'Velocidad A', borderColor: '#e11d48', data: arrayVelA, tension: 0.2, pointRadius: 0, borderWidth: 2 },
+            { label: 'Velocidad B', borderColor: '#0284c7', data: arrayVelB, tension: 0.2, pointRadius: 0, borderWidth: 2 }
+        ]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: false,
+        scales: {
+            y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#64748b' } }, // Rejilla oscura sutil
+            x: { display: false }
+        },
+        plugins: { legend: { labels: { color: '#1e293b' } } } // Textos oscuros
+    }
+});
+
+// ==================== 3. MOTOR DE FÍSICA ====================
 const canvas = document.getElementById("simCanvas");
 const ctx = canvas.getContext("2d");
 
-// Variables de estado
 let animacionID;
 let simulando = false;
+let frameCount = 0;
 
-// Definición de nuestras dos esferas
-let esfera1 = { x: 150, y: 150, radio: 30, masa: 20, vel: 0, color: "#ef4444" };
-let esfera2 = { x: 650, y: 150, radio: 30, masa: 15, vel: 0, color: "#3b82f6" };
+// Esferas con la nueva paleta de colores
+let esferaA = { x: 150, y: 150, radio: 30, masa: 20, vel: 0, color: "#ff5c88" };
+let esferaB = { x: 650, y: 150, radio: 30, masa: 15, vel: 0, color: "#00f0ff" };
 
-// Referencias a los botones y textos
-const btnSimular = document.getElementById("btnSimular");
-const btnReiniciar = document.getElementById("btnReiniciar");
 const v1Text = document.getElementById("v1-actual");
 const v2Text = document.getElementById("v2-actual");
 
-// Función para pintar todo en el canvas
 function dibujarLienzo() {
-    // Limpiar canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Dibujar suelo/línea de riel
-    ctx.beginPath();
-    ctx.moveTo(0, 180);
-    ctx.lineTo(canvas.width, 180);
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
-    ctx.lineWidth = 2;
-    ctx.stroke();
+    // Suelo oscuro en vez de blanco
+    ctx.beginPath(); ctx.moveTo(0, 180); ctx.lineTo(canvas.width, 180);
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.2)"; // <--- LÍNEA CAMBIADA
+    ctx.lineWidth = 2; ctx.stroke();
 
-    // Dibujar Esfera 1
-    dibujarEsfera(esfera1);
-
-    // Dibujar Esfera 2
-    dibujarEsfera(esfera2);
+    dibujarEsfera(esferaA);
+    dibujarEsfera(esferaB);
 }
 
 function dibujarEsfera(esfera) {
-    ctx.beginPath();
-    ctx.arc(esfera.x, esfera.y, esfera.radio, 0, Math.PI * 2);
-    ctx.fillStyle = esfera.color;
-    ctx.fill();
-
-    // Brillo para darle efecto 3D
-    ctx.beginPath();
-    ctx.arc(esfera.x - 10, esfera.y - 10, esfera.radio / 4, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255, 255, 255, 0.3)";
-    ctx.fill();
+    ctx.beginPath(); ctx.arc(esfera.x, esfera.y, esfera.radio, 0, Math.PI * 2);
+    ctx.fillStyle = esfera.color; ctx.fill();
+    // Brillo 3D
+    ctx.beginPath(); ctx.arc(esfera.x - 10, esfera.y - 10, esfera.radio / 4, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.4)"; ctx.fill();
 }
 
-// Lógica de Movimiento y Física
 function actualizarFisica() {
     if (!simulando) return;
 
-    // Mover esferas
-    esfera1.x += esfera1.vel;
-    esfera2.x += esfera2.vel;
+    esferaA.x += esferaA.vel;
+    esferaB.x += esferaB.vel;
 
-    // DETECCIÓN DE COLISIÓN (Si la distancia entre centros es menor o igual a la suma de radios)
-    let distancia = Math.abs(esfera1.x - esfera2.x);
-    if (distancia <= esfera1.radio + esfera2.radio) {
+    // COLISIÓN ELÁSTICA (Conservación de momento y energía)
+    let distancia = Math.abs(esferaA.x - esferaB.x);
+    if (distancia <= esferaA.radio + esferaB.radio) {
+        let vAFinal = ((esferaA.masa - esferaB.masa) * esferaA.vel + (2 * esferaB.masa * esferaB.vel)) / (esferaA.masa + esferaB.masa);
+        let vBFinal = ((esferaB.masa - esferaA.masa) * esferaB.vel + (2 * esferaA.masa * esferaA.vel)) / (esferaA.masa + esferaB.masa);
 
-        // Fórmulas matemáticas de Colisión Elástica 1D
-        let v1Final = ((esfera1.masa - esfera2.masa) * esfera1.vel + (2 * esfera2.masa * esfera2.vel)) / (esfera1.masa + esfera2.masa);
-        let v2Final = ((esfera2.masa - esfera1.masa) * esfera2.vel + (2 * esfera1.masa * esfera1.vel)) / (esfera1.masa + esfera2.masa);
+        esferaA.vel = vAFinal;
+        esferaB.vel = vBFinal;
 
-        // Asignar nuevas velocidades
-        esfera1.vel = v1Final;
-        esfera2.vel = v2Final;
-
-        // Separar las esferas para evitar que se queden pegadas (bug de superposición)
-        let superposicion = (esfera1.radio + esfera2.radio) - distancia;
-        if (esfera1.x < esfera2.x) {
-            esfera1.x -= superposicion / 2;
-            esfera2.x += superposicion / 2;
-        } else {
-            esfera1.x += superposicion / 2;
-            esfera2.x -= superposicion / 2;
-        }
+        // Anti-bug (separar para que no se peguen)
+        let superposicion = (esferaA.radio + esferaB.radio) - distancia;
+        if (esferaA.x < esferaB.x) { esferaA.x -= superposicion / 2; esferaB.x += superposicion / 2; }
+        else { esferaA.x += superposicion / 2; esferaB.x -= superposicion / 2; }
     }
 
-    // Rebotar contra las paredes
-    if (esfera1.x - esfera1.radio <= 0 || esfera1.x + esfera1.radio >= canvas.width) {
-        esfera1.vel *= -1; // Invierte dirección
-    }
-    if (esfera2.x - esfera2.radio <= 0 || esfera2.x + esfera2.radio >= canvas.width) {
-        esfera2.vel *= -1;
-    }
+    // Rebote en las paredes
+    if (esferaA.x - esferaA.radio <= 0 || esferaA.x + esferaA.radio >= canvas.width) { esferaA.vel *= -1; }
+    if (esferaB.x - esferaB.radio <= 0 || esferaB.x + esferaB.radio >= canvas.width) { esferaB.vel *= -1; }
 
-    // Actualizar textos en pantalla
-    v1Text.innerText = esfera1.vel.toFixed(2);
-    v2Text.innerText = esfera2.vel.toFixed(2);
+    // Actualizar UI
+    v1Text.innerText = esferaA.vel.toFixed(2);
+    v2Text.innerText = esferaB.vel.toFixed(2);
+
+    // Actualizar Gráfico Chart.js (Cada 2 frames para optimizar rendimiento)
+    frameCount++;
+    if (frameCount % 2 === 0) {
+        arrayVelA.push(esferaA.vel); arrayVelA.shift(); // Mete el nuevo dato y saca el más viejo
+        arrayVelB.push(esferaB.vel); arrayVelB.shift();
+        grafica.update();
+    }
 }
 
-// Bucle principal de animación (Game Loop)
 function loop() {
     actualizarFisica();
     dibujarLienzo();
     animacionID = requestAnimationFrame(loop);
 }
 
-// Controles
-btnSimular.addEventListener("click", () => {
+// ==================== 4. CONTROLES ====================
+document.getElementById("btnSimular").addEventListener("click", () => {
     if (!simulando) {
-        // Leer valores de los inputs solo al iniciar
-        esfera1.masa = parseFloat(document.getElementById("m1").value);
-        esfera1.vel = parseFloat(document.getElementById("v1").value);
-        // El radio puede depender de la masa para hacerlo más visual
-        esfera1.radio = 20 + (esfera1.masa / 5);
+        esferaA.masa = parseFloat(document.getElementById("m1").value);
+        esferaA.vel = parseFloat(document.getElementById("v1").value);
+        esferaA.radio = 20 + (esferaA.masa / 5);
 
-        esfera2.masa = parseFloat(document.getElementById("m2").value);
-        esfera2.vel = parseFloat(document.getElementById("v2").value);
-        esfera2.radio = 20 + (esfera2.masa / 5);
+        esferaB.masa = parseFloat(document.getElementById("m2").value);
+        esferaB.vel = parseFloat(document.getElementById("v2").value);
+        esferaB.radio = 20 + (esferaB.masa / 5);
 
-        // Ajustar posición inicial (Y) según el nuevo radio
-        esfera1.y = 180 - esfera1.radio;
-        esfera2.y = 180 - esfera2.radio;
+        esferaA.y = 180 - esferaA.radio;
+        esferaB.y = 180 - esferaB.radio;
 
         simulando = true;
-        btnSimular.innerText = "⏸ Pausar";
+        document.getElementById("btnSimular").innerText = "⏸ Pausar";
     } else {
         simulando = false;
-        btnSimular.innerText = "▶ Continuar";
+        document.getElementById("btnSimular").innerText = "▶ Continuar";
     }
 });
 
-btnReiniciar.addEventListener("click", () => {
+document.getElementById("btnReiniciar").addEventListener("click", () => {
     simulando = false;
-    btnSimular.innerText = "▶ Iniciar Simulación";
+    document.getElementById("btnSimular").innerText = "▶ Iniciar Simulación";
 
-    // Restaurar posiciones
-    esfera1.x = 150;
-    esfera1.vel = 0;
+    esferaA.x = 150; esferaA.vel = 0;
+    esferaB.x = 650; esferaB.vel = 0;
+    v1Text.innerText = "0.00"; v2Text.innerText = "0.00";
 
-    esfera2.x = 650;
-    esfera2.vel = 0;
-
-    v1Text.innerText = "0.00";
-    v2Text.innerText = "0.00";
+    // Limpiar gráfico
+    arrayVelA.fill(0); arrayVelB.fill(0);
+    grafica.update();
 
     dibujarLienzo();
 });
 
-// Iniciar dibujando el lienzo vacío la primera vez
-// Encender el motor de física (Game Loop)
+// Arrancar motor
+dibujarLienzo();
 loop();
