@@ -1,14 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Simulador de Colisiones Físicas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="colisiones.css">
 </head>
 
 <body>
+    <div class="dashboard-wrapper">
+        <h1 class="titulo-neon">💥 Simulador de Colisiones Elásticas</h1>
 
+        <div class="canvas-container">
+            <canvas id="simCanvas" width="800" height="300"></canvas>
+        </div>
+
+        <div class="controles-grid">
+            <div class="card-cristal neon-rojo">
+                <h3>🔴 Esfera 1</h3>
+                <div class="input-group">
+                    <label for="m1">Masa (kg):</label>
+                    <input type="number" id="m1" value="20" min="1" max="100">
+                </div>
+                <div class="input-group">
+                    <label for="v1">Velocidad (m/s):</label>
+                    <input type="number" id="v1" value="5">
+                </div>
+                <p>Velocidad Actual: <span id="v1-actual">0.00</span> m/s</p>
+            </div>
+
+            <div class="acciones-panel">
+                <button id="btnSimular" class="btn-primario">▶ Iniciar Simulación</button>
+                <button id="btnReiniciar" class="btn-secundario">🔄 Reiniciar</button>
+            </div>
+
+            <div class="card-cristal neon-azul">
+                <h3>🔵 Esfera 2</h3>
+                <div class="input-group">
+                    <label for="m2">Masa (kg):</label>
+                    <input type="number" id="m2" value="15" min="1" max="100">
+                </div>
+                <div class="input-group">
+                    <label for="v2">Velocidad (m/s):</label>
+                    <input type="number" id="v2" value="-4">
+                </div>
+                <p>Velocidad Actual: <span id="v2-actual">0.00</span> m/s</p>
+            </div>
+        </div>
+        <h2 class="subtitulo-neon">📚 Fundamentos Matemáticos y Físicos</h2>
+
+        <div class="teoria-grid">
+            <div class="card-teoria neon-verde">
+                <h3>⚖️ Conservación del Momento</h3>
+                <p>El momento lineal (<code class="formula">p = m · v</code>) es una magnitud vectorial que mide la
+                    cantidad de movimiento de un cuerpo. En un sistema aislado donde no actúan fuerzas externas, el
+                    momento lineal total antes del choque es exactamente igual al momento total después del choque.</p>
+                <div class="formula-box">∑ p<sub>inicial</sub> = ∑ p<sub>final</sub></div>
+            </div>
+
+            <div class="card-teoria neon-rojo-lateral">
+                <h3>💥 Colisiones Elásticas</h3>
+                <p>Son aquellas en las que se conserva tanto el momento lineal como la <strong>Energía Cinética</strong>
+                    total del sistema. Los objetos rebotan perfectamente sin perder energía en forma de calor o
+                    deformaciones permanentes. ¡Es la física exacta que utiliza nuestro simulador en el Canvas!</p>
+                <div class="formula-box">∑ Ec<sub>inicial</sub> = ∑ Ec<sub>final</sub></div>
+            </div>
+
+            <div class="card-teoria neon-azul-lateral">
+                <h3>🛹 Colisiones Inelásticas</h3>
+                <p>En este tipo de impactos, el momento se conserva, pero la energía cinética **no**. Parte de esa
+                    energía se disipa en forma de calor, sonido o deformación plástica. Si los cuerpos se quedan
+                    completamente pegados tras el choque, se le conoce como una colisión <em>perfectamente
+                        inelástica</em>.</p>
+                <div class="formula-box text-amarillo">Ec<sub>final</sub> &lt; Ec<sub>inicial</sub></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="colisiones.js"></script>
 </body>
 
 </html>
