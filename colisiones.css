@@ -312,3 +312,120 @@ canvas {
 .neon-purple-lateral {
     border-left: 4px solid var(--accent-purple);
 }
+
+footer {
+    position: fixed;
+    bottom: 0;
+    width: 100vw;
+    text-align: center;
+    justify-content: center;
+    margin-top: 20px;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    background-color: var(--card-bg);
+    padding: 10px;
+    border-radius: 10px;
+}
+
+/* --- Footer --- */
+.footer-clinico {
+    text-align: center;
+    padding: 20px;
+    margin-top: 20px;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+    width: 100%;
+}
+
+/* --- Modal del Historial --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.4);
+    /* Fondo oscuro transparente */
+    backdrop-filter: blur(5px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.activo {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-content {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    position: relative;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.activo .modal-content {
+    transform: translateY(0);
+}
+
+.btn-cerrar {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 50%;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+    color: var(--text-main);
+    font-weight: bold;
+    transition: 0.2s;
+    font-size: 1rem;
+}
+
+.btn-cerrar:hover {
+    background: var(--accent-rosa);
+    color: white;
+    transform: scale(1.1);
+}
+
+/* --- Tabla de Historial --- */
+.table-container {
+    max-height: 300px;
+    overflow-y: auto;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+th,
+td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+th {
+    background: #f8fafc;
+    color: var(--text-main);
+    position: sticky;
+    top: 0;
+}
+
+tbody tr:hover {
+    background: #f8fafc;
+}

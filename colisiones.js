@@ -34,7 +34,12 @@ const grafica = new Chart(ctxChart, {
         responsive: true, maintainAspectRatio: false,
         animation: false,
         scales: {
-            y: { grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { color: '#64748b' } }, // Rejilla oscura sutil
+            y: {
+                grid: { color: 'rgba(0,0,0,0.05)' },
+                ticks: { color: '#64748b' },
+                suggestedMin: -15, // <--- ESTO ESTABILIZA EL GRÁFICO
+                suggestedMax: 15   // <--- ESTO ESTABILIZA EL GRÁFICO
+            },
             x: { display: false }
         },
         plugins: { legend: { labels: { color: '#1e293b' } } } // Textos oscuros
@@ -82,22 +87,43 @@ function actualizarFisica() {
     esferaA.x += esferaA.vel;
     esferaB.x += esferaB.vel;
 
-    // COLISIÓN ELÁSTICA (Conservación de momento y energía)
     let distancia = Math.abs(esferaA.x - esferaB.x);
-    if (distancia <= esferaA.radio + esferaB.radio) {
-        let vAFinal = ((esferaA.masa - esferaB.masa) * esferaA.vel + (2 * esferaB.masa * esferaB.vel)) / (esferaA.masa + esferaB.masa);
-        let vBFinal = ((esferaB.masa - esferaA.masa) * esferaB.vel + (2 * esferaA.masa * esferaA.vel)) / (esferaA.masa + esferaB.masa);
+
+    // ¿Las esferas se están acercando? (Esto evita que se queden pegadas calculando el choque infinitamente)
+    let acercandose = false;
+    if (esferaA.x < esferaB.x && esferaA.vel > esferaB.vel) acercandose = true;
+    if (esferaA.x > esferaB.x && esferaA.vel < esferaB.vel) acercandose = true;
+
+    // COLISIÓN CON COEFICIENTE DE RESTITUCIÓN
+    if (distancia <= esferaA.radio + esferaB.radio && acercandose) {
+
+        // Aquí leemos tu input (asegúrate de que en tu HTML le pusiste id="coeficiente" a tu input)
+        // Si no lo encuentra, por defecto será 1 (elástico)
+        let inputCoef = document.getElementById("coeficiente");
+        let e = inputCoef ? parseFloat(inputCoef.value) : 1;
+
+        // Conservación del Momento Total (p)
+        let pTotal = (esferaA.masa * esferaA.vel) + (esferaB.masa * esferaB.vel);
+
+        // Fórmulas de colisión inelástica/elástica aplicando "e"
+        let vAFinal = (pTotal + esferaB.masa * e * (esferaB.vel - esferaA.vel)) / (esferaA.masa + esferaB.masa);
+        let vBFinal = (pTotal + esferaA.masa * e * (esferaA.vel - esferaB.vel)) / (esferaA.masa + esferaB.masa);
 
         esferaA.vel = vAFinal;
         esferaB.vel = vBFinal;
 
-        // Anti-bug (separar para que no se peguen)
+        // Separar solo lo necesario visualmente si se superpusieron un poco
         let superposicion = (esferaA.radio + esferaB.radio) - distancia;
-        if (esferaA.x < esferaB.x) { esferaA.x -= superposicion / 2; esferaB.x += superposicion / 2; }
-        else { esferaA.x += superposicion / 2; esferaB.x -= superposicion / 2; }
+        if (esferaA.x < esferaB.x) {
+            esferaA.x -= superposicion / 2;
+            esferaB.x += superposicion / 2;
+        } else {
+            esferaA.x += superposicion / 2;
+            esferaB.x -= superposicion / 2;
+        }
     }
 
-    // Rebote en las paredes
+    // Rebote en las paredes (Mantenemos el rebote perfecto con los bordes del canvas)
     if (esferaA.x - esferaA.radio <= 0 || esferaA.x + esferaA.radio >= canvas.width) { esferaA.vel *= -1; }
     if (esferaB.x - esferaB.radio <= 0 || esferaB.x + esferaB.radio >= canvas.width) { esferaB.vel *= -1; }
 
@@ -105,10 +131,10 @@ function actualizarFisica() {
     v1Text.innerText = esferaA.vel.toFixed(2);
     v2Text.innerText = esferaB.vel.toFixed(2);
 
-    // Actualizar Gráfico Chart.js (Cada 2 frames para optimizar rendimiento)
+    // Actualizar Gráfico Chart.js
     frameCount++;
     if (frameCount % 2 === 0) {
-        arrayVelA.push(esferaA.vel); arrayVelA.shift(); // Mete el nuevo dato y saca el más viejo
+        arrayVelA.push(esferaA.vel); arrayVelA.shift();
         arrayVelB.push(esferaB.vel); arrayVelB.shift();
         grafica.update();
     }
@@ -119,7 +145,8 @@ function loop() {
     dibujarLienzo();
     animacionID = requestAnimationFrame(loop);
 }
-
+//si es entre cero y uno la pelota rebota si es cero quedan pegadas
+//guarden las velocidades finales en dos variables
 // ==================== 4. CONTROLES ====================
 document.getElementById("btnSimular").addEventListener("click", () => {
     if (!simulando) {
@@ -160,3 +187,39 @@ document.getElementById("btnReiniciar").addEventListener("click", () => {
 // Arrancar motor
 dibujarLienzo();
 loop();
+
+// ==================== 5. SISTEMA DE HISTORIAL ====================
+let historialEventos = [];
+
+function registrarEvento(nombreEvento) {
+    historialEventos.push({
+        evento: nombreEvento,
+        vA: esferaA.vel.toFixed(2),
+        vB: esferaB.vel.toFixed(2)
+    });
+}
+
+// Escuchar el clic en el gráfico de Chart.js
+document.getElementById('graficoVelocidad').addEventListener('click', () => {
+    const tbody = document.getElementById('bodyHistorial');
+    tbody.innerHTML = ''; // Limpiar tabla
+
+    if (historialEventos.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3">Aún no hay colisiones registradas. ¡Inicia la simulación!</td></tr>';
+    } else {
+        // Llenar tabla con el historial
+        historialEventos.forEach(ev => {
+            tbody.innerHTML += `<tr>
+                <td style="font-weight:bold;">${ev.evento}</td>
+                <td class="texto-rosa">${ev.vA}</td>
+                <td class="texto-cian">${ev.vB}</td>
+            </tr>`;
+        });
+    }
+    // Abrir Modal
+    document.getElementById('modalHistorial').classList.add('activo');
+});
+
+function cerrarModal() {
+    document.getElementById('modalHistorial').classList.remove('activo');
+}
