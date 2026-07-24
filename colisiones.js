@@ -89,7 +89,7 @@ function actualizarFisica() {
 
     let distancia = Math.abs(esferaA.x - esferaB.x);
 
-    // ¿Las esferas se están acercando? (Esto evita que se queden pegadas calculando el choque infinitamente)
+    // ¿Las esferas se están acercando?
     let acercandose = false;
     if (esferaA.x < esferaB.x && esferaA.vel > esferaB.vel) acercandose = true;
     if (esferaA.x > esferaB.x && esferaA.vel < esferaB.vel) acercandose = true;
@@ -97,22 +97,20 @@ function actualizarFisica() {
     // COLISIÓN CON COEFICIENTE DE RESTITUCIÓN
     if (distancia <= esferaA.radio + esferaB.radio && acercandose) {
 
-        // Aquí leemos tu input (asegúrate de que en tu HTML le pusiste id="coeficiente" a tu input)
-        // Si no lo encuentra, por defecto será 1 (elástico)
         let inputCoef = document.getElementById("coeficiente");
         let e = inputCoef ? parseFloat(inputCoef.value) : 1;
 
         // Conservación del Momento Total (p)
         let pTotal = (esferaA.masa * esferaA.vel) + (esferaB.masa * esferaB.vel);
 
-        // Fórmulas de colisión inelástica/elástica aplicando "e"
+        // Fórmulas de colisión aplicando "e"
         let vAFinal = (pTotal + esferaB.masa * e * (esferaB.vel - esferaA.vel)) / (esferaA.masa + esferaB.masa);
         let vBFinal = (pTotal + esferaA.masa * e * (esferaA.vel - esferaB.vel)) / (esferaA.masa + esferaB.masa);
 
         esferaA.vel = vAFinal;
         esferaB.vel = vBFinal;
 
-        // Separar solo lo necesario visualmente si se superpusieron un poco
+        // Separar visualmente si se superponen
         let superposicion = (esferaA.radio + esferaB.radio) - distancia;
         if (esferaA.x < esferaB.x) {
             esferaA.x -= superposicion / 2;
@@ -121,11 +119,26 @@ function actualizarFisica() {
             esferaA.x += superposicion / 2;
             esferaB.x -= superposicion / 2;
         }
+
+        // 🔥 ¡AQUÍ GUARDAMOS EN EL HISTORIAL!
+        registrarEvento("💥 Choque Central (e=" + e + ")");
     }
 
-    // Rebote en las paredes (Mantenemos el rebote perfecto con los bordes del canvas)
-    if (esferaA.x - esferaA.radio <= 0 || esferaA.x + esferaA.radio >= canvas.width) { esferaA.vel *= -1; }
-    if (esferaB.x - esferaB.radio <= 0 || esferaB.x + esferaB.radio >= canvas.width) { esferaB.vel *= -1; }
+    // Rebote en las paredes
+    let chocoPared = false;
+    if (esferaA.x - esferaA.radio <= 0 || esferaA.x + esferaA.radio >= canvas.width) {
+        esferaA.vel *= -1;
+        chocoPared = true;
+    }
+    if (esferaB.x - esferaB.radio <= 0 || esferaB.x + esferaB.radio >= canvas.width) {
+        esferaB.vel *= -1;
+        chocoPared = true;
+    }
+
+    // 🔥 GUARDAMOS EL REBOTE
+    if (chocoPared) {
+        registrarEvento("🧱 Rebote en Muro");
+    }
 
     // Actualizar UI
     v1Text.innerText = esferaA.vel.toFixed(2);
@@ -145,9 +158,9 @@ function loop() {
     dibujarLienzo();
     animacionID = requestAnimationFrame(loop);
 }
-//si es entre cero y uno la pelota rebota si es cero quedan pegadas
-//guarden las velocidades finales en dos variables
+
 // ==================== 4. CONTROLES ====================
+// ==================== CONTROLES ====================
 document.getElementById("btnSimular").addEventListener("click", () => {
     if (!simulando) {
         esferaA.masa = parseFloat(document.getElementById("m1").value);
@@ -163,6 +176,9 @@ document.getElementById("btnSimular").addEventListener("click", () => {
 
         simulando = true;
         document.getElementById("btnSimular").innerText = "⏸ Pausar";
+
+        // 🔥 GUARDAMOS EL INICIO
+        registrarEvento("▶ Inicio Simulación");
     } else {
         simulando = false;
         document.getElementById("btnSimular").innerText = "▶ Continuar";
@@ -180,6 +196,9 @@ document.getElementById("btnReiniciar").addEventListener("click", () => {
     // Limpiar gráfico
     arrayVelA.fill(0); arrayVelB.fill(0);
     grafica.update();
+
+    // 🔥 LIMPIAMOS EL HISTORIAL COMPLETAMENTE
+    historialEventos = [];
 
     dibujarLienzo();
 });
@@ -223,3 +242,28 @@ document.getElementById('graficoVelocidad').addEventListener('click', () => {
 function cerrarModal() {
     document.getElementById('modalHistorial').classList.remove('activo');
 }
+
+// ==================== 6. VALIDACIÓN DE ENTRADA EN TIEMPO REAL ====================
+const inputCoeficiente = document.getElementById("coeficiente");
+const errorCoeficiente = document.getElementById("errorCoeficiente");
+const botonSimular = document.getElementById("btnSimular");
+
+inputCoeficiente.addEventListener("input", () => {
+    let valor = parseFloat(inputCoeficiente.value);
+
+    // Si el valor es menor a 0, mayor a 1, o si el usuario borró todo y quedó vacío
+    if (valor < 0 || valor > 1 || isNaN(valor)) {
+        // Mostrar error rojo
+        errorCoeficiente.style.display = "block";
+        // Apagar el botón de inicio
+        botonSimular.disabled = true;
+        botonSimular.style.opacity = "0.5";
+        botonSimular.style.cursor = "not-allowed";
+    } else {
+        // Todo está bien, ocultar error y encender botón
+        errorCoeficiente.style.display = "none";
+        botonSimular.disabled = false;
+        botonSimular.style.opacity = "1";
+        botonSimular.style.cursor = "pointer";
+    }
+});

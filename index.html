@@ -12,7 +12,8 @@
 
 <body>
     <div class="dashboard-wrapper">
-        <h1 class="titulo-principal">Laboratorio de Colisiones</h1>
+        <h1 class="titulo-principal" style="color: var(--color-neon-pink); font-size: 3.5rem;">Laboratorio de Colisiones
+        </h1>
 
         <nav class="navbar-glass">
             <button class="nav-btn activo" id="btnNavSimulador" onclick="cambiarVista('simulador')">Simulador</button>
@@ -35,22 +36,32 @@
                         <label for="v1">Vel (m/s):</label>
                         <input type="number" id="v1" value="5">
                     </div>
-                    <div class="input-group">
-                        <label for="r1">Restitución:</label>
-                        <input type="number" id="coeficiente" value="1" min="0" max="1" step="0.1">
-                    </div>
                     <p>V. Actual: <span id="v1-actual" class="texto-rosa">0.00</span> m/s</p>
                 </div>
 
                 <div class="acciones-panel">
-                    <button id="btnSimular" class="btn-primario">Iniciar Simulación</button>
-                    <button id="btnReiniciar" class="btn-secundario">Reiniciar</button>
+                    <div class="input-group"
+                        style="background: rgba(0,0,0,0.03); padding: 15px; border-radius: 8px; justify-content: center; flex-direction: column; gap: 8px; border: 1px solid #e2e8f0; margin-bottom: 5px;">
+                        <label for="coeficiente"
+                            style="color: var(--text-main); font-weight: bold; font-size: 0.95rem;">Coef. de Restitución
+                            (e):</label>
+                        <input type="number" id="coeficiente" value="1" min="0" max="1" step="0.1"
+                            style="width: 100%; max-width: 120px;">
+
+                        <span id="errorCoeficiente"
+                            style="color: #e11d48; font-size: 0.8rem; font-weight: bold; display: none; text-align: center;">
+                            ⚠️ Debe ser entre 0 y 1
+                        </span>
+                    </div>
+
+                    <button id="btnSimular" class="btn-primario"> Iniciar Simulación</button>
+                    <button id="btnReiniciar" class="btn-secundario"> Reiniciar</button>
+
                     <div class="chart-container">
                         <canvas id="graficoVelocidad" style="cursor: pointer;"
                             title="Haz clic para ver el historial"></canvas>
                     </div>
                 </div>
-
                 <div class="card-cristal neon-cian">
                     <h3>Esfera B</h3>
                     <div class="input-group">
@@ -61,72 +72,69 @@
                         <label for="v2">Vel (m/s):</label>
                         <input type="number" id="v2" value="-4">
                     </div>
-                    <div class="input-group">
-                        <label for="r2">Restitución:</label>
-                        <input type="number" id="coeficiente" value="1" min="0" max="1" step="0.1">
-                    </div>
                     <p>V. Actual: <span id="v2-actual" class="texto-cian">0.00</span> m/s</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="vista-teoria" class="vista">
-            <h2 class="subtitulo-neon">Fundamentos Matemáticos</h2>
-            <div class="teoria-grid">
-                <div class="card-teoria neon-rosa-lateral">
-                    <h3>Conservación del Momento</h3>
-                    <p>El momento lineal (<code class="formula">p = m · v</code>) es una magnitud vectorial. En un
-                        sistema aislado, el momento total antes del choque es exactamente igual al momento total después
-                        del choque.</p>
-                    <div class="formula-box texto-rosa">∑ p<sub>inicial</sub> = ∑ p<sub>final</sub></div>
-                </div>
-
-                <div class="card-teoria neon-cian-lateral">
-                    <h3>Colisiones Elásticas</h3>
-                    <p>Son aquellas en las que se conserva tanto el momento lineal como la <strong>Energía
-                            Cinética</strong> total. Los objetos rebotan perfectamente sin deformarse ni perder energía.
-                        ¡Es la física de nuestro simulador!</p>
-                    <div class="formula-box texto-cian">∑ Ec<sub>inicial</sub> = ∑ Ec<sub>final</sub></div>
-                </div>
-
-                <div class="card-teoria neon-purple-lateral">
-                    <h3>Coeficiente de Restitución</h3>
-                    <p>El coeficiente de restitución es una medida de cuán elástica es una colisión. En una colisión
-                        elástica, el coeficiente de restitución es 1.</p>
-                    <div class="formula-box texto-rosa">e = (v₂f - v₁f) / (v₁i - v₂i)</div>
-                </div>
-
-                <div class="card-teoria neon-rosa-lateral">
-                    <h3>Ecuacion de Conservación del Momento</h3>
-                    <p>En un sistema aislado, el momento total antes del choque es exactamente igual al momento total
-                        después del choque.</p>
-                    <div class="formula-box texto-rosa">m₁v₁i + m₂v₂i = m₁v₁f + m₂v₂f</div>
-                </div>
-
-                <div class="card-teoria neon-cian-lateral">
-                    <h3>Ecuaciones de la Colisión Elástica</h3>
-                    <p>En una colisión elástica, se cumplen las siguientes ecuaciones:</p>
-                    <div class="formula-box texto-cian">v<sub>1f</sub> = ((m<sub>1</sub>-m<sub>2</sub>)v<sub>1i</sub> +
-                        2m<sub>2</sub>v<sub>2i</sub>)/(m<sub>1</sub>+m<sub>2</sub>)</div>
-                    <div class="formula-box texto-cian">v<sub>2f</sub> = (2m<sub>1</sub>v<sub>1i</sub> +
-                        (m<sub>2</sub>-m<sub>1</sub>)v<sub>2i</sub>)/(m<sub>1</sub>+m<sub>2</sub>)</div>
-                </div>
-                <div class="card-teoria neon-purple-lateral">
-                    <h3>Tipos de Colisiones</h3>
-                    <p>1. <strong>Colisión elástica</strong>: Se conserva el momento lineal y la energía cinética.
-                    <p>2. <strong>Colisión inelástica</strong>: Se conserva el momento lineal, pero no la energía
-                        cinética.</p>
-                    <p>3. <strong>Colisión perfectamente inelástica</strong>: Se conserva el momento lineal, pero no la
-                        energía cinética y los objetos se quedan pegados.</p>
                 </div>
             </div>
         </div>
     </div>
 
+    <div id="vista-teoria" class="vista">
+        <h2 class="subtitulo-neon">Fundamentos Matemáticos</h2>
+        <div class="teoria-grid">
+            <div class="card-teoria neon-rosa-lateral">
+                <h3>Conservación del Momento</h3>
+                <p>El momento lineal (<code class="formula">p = m · v</code>) es una magnitud vectorial. En un
+                    sistema aislado, el momento total antes del choque es exactamente igual al momento total después
+                    del choque.</p>
+                <div class="formula-box texto-rosa">∑ p<sub>inicial</sub> = ∑ p<sub>final</sub></div>
+            </div>
+
+            <div class="card-teoria neon-cian-lateral">
+                <h3>Colisiones Elásticas</h3>
+                <p>Son aquellas en las que se conserva tanto el momento lineal como la <strong>Energía
+                        Cinética</strong> total. Los objetos rebotan perfectamente sin deformarse ni perder energía.
+                    ¡Es la física de nuestro simulador!</p>
+                <div class="formula-box texto-cian">∑ Ec<sub>inicial</sub> = ∑ Ec<sub>final</sub></div>
+            </div>
+
+            <div class="card-teoria neon-purple-lateral">
+                <h3>Coeficiente de Restitución</h3>
+                <p>El coeficiente de restitución es una medida de cuán elástica es una colisión. En una colisión
+                    elástica, el coeficiente de restitución es 1.</p>
+                <div class="formula-box texto-rosa">e = (v₂f - v₁f) / (v₁i - v₂i)</div>
+            </div>
+
+            <div class="card-teoria neon-rosa-lateral">
+                <h3>Ecuacion de Conservación del Momento</h3>
+                <p>En un sistema aislado, el momento total antes del choque es exactamente igual al momento total
+                    después del choque.</p>
+                <div class="formula-box texto-rosa">m₁v₁i + m₂v₂i = m₁v₁f + m₂v₂f</div>
+            </div>
+
+            <div class="card-teoria neon-cian-lateral">
+                <h3>Ecuaciones de la Colisión Elástica</h3>
+                <p>En una colisión elástica, se cumplen las siguientes ecuaciones:</p>
+                <div class="formula-box texto-cian">v<sub>1f</sub> = ((m<sub>1</sub>-m<sub>2</sub>)v<sub>1i</sub> +
+                    2m<sub>2</sub>v<sub>2i</sub>)/(m<sub>1</sub>+m<sub>2</sub>)</div>
+                <div class="formula-box texto-cian">v<sub>2f</sub> = (2m<sub>1</sub>v<sub>1i</sub> +
+                    (m<sub>2</sub>-m<sub>1</sub>)v<sub>2i</sub>)/(m<sub>1</sub>+m<sub>2</sub>)</div>
+            </div>
+            <div class="card-teoria neon-purple-lateral">
+                <h3>Tipos de Colisiones</h3>
+                <p>1. <strong>Colisión elástica</strong>: Se conserva el momento lineal y la energía cinética.
+                <p>2. <strong>Colisión inelástica</strong>: Se conserva el momento lineal, pero no la energía
+                    cinética.</p>
+                <p>3. <strong>Colisión perfectamente inelástica</strong>: Se conserva el momento lineal, pero no la
+                    energía cinética y los objetos se quedan pegados.</p>
+            </div>
+        </div>
+    </div>
+    </div>
+
     <script src="colisiones.js"></script>
     <footer class="footer-clinico">
-        <p>👨‍💻 Proyecto de Física | <span class="texto-rosa">Simulador de Colisiones Interactivo</span> | Creado con
-            pasión</p>
+        <p>👨‍💻 Proyecto de Física | <span class="texto-rosa">Simulador de Colisiones Interactivo</span> | Morillo M -
+            Caicedo A</p>
     </footer>
 
     <div id="modalHistorial" class="modal-overlay">
