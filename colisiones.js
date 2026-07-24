@@ -1,13 +1,10 @@
 // ==================== 1. NAVEGACIÓN SPA ====================
 function cambiarVista(vistaDestino) {
-    // Ocultar todas las vistas y desactivar botones
     document.querySelectorAll('.vista').forEach(v => v.classList.remove('activa'));
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('activo'));
 
-    // Mostrar la vista seleccionada
     document.getElementById('vista-' + vistaDestino).classList.add('activa');
 
-    // Activar el botón correspondiente
     if (vistaDestino === 'simulador') {
         document.getElementById('btnNavSimulador').classList.add('activo');
     } else {
@@ -31,18 +28,19 @@ const grafica = new Chart(ctxChart, {
         ]
     },
     options: {
-        responsive: true, maintainAspectRatio: false,
+        responsive: true,
+        maintainAspectRatio: false,
         animation: false,
         scales: {
             y: {
                 grid: { color: 'rgba(0,0,0,0.05)' },
                 ticks: { color: '#64748b' },
-                suggestedMin: -15, // <--- ESTO ESTABILIZA EL GRÁFICO
-                suggestedMax: 15   // <--- ESTO ESTABILIZA EL GRÁFICO
+                suggestedMin: -15,
+                suggestedMax: 15
             },
             x: { display: false }
         },
-        plugins: { legend: { labels: { color: '#1e293b' } } } // Textos oscuros
+        plugins: { legend: { labels: { color: '#1e293b' } } }
     }
 });
 
@@ -54,31 +52,49 @@ let animacionID;
 let simulando = false;
 let frameCount = 0;
 
-// Esferas con la nueva paleta de colores
-let esferaA = { x: 150, y: 150, radio: 30, masa: 20, vel: 0, color: "#ff5c88" };
-let esferaB = { x: 650, y: 150, radio: 30, masa: 15, vel: 0, color: "#00f0ff" };
+let esferaA = { x: 150, y: 150, radio: 30, masa: 20, vel: 0, color: "#e11d48" };
+let esferaB = { x: 650, y: 150, radio: 30, masa: 15, vel: 0, color: "#0284c7" };
 
 const v1Text = document.getElementById("v1-actual");
 const v2Text = document.getElementById("v2-actual");
 
+// Historial de Eventos
+let historialEventos = [];
+
+function registrarEvento(nombreEvento) {
+    historialEventos.push({
+        evento: nombreEvento,
+        vA: esferaA.vel.toFixed(2),
+        vB: esferaB.vel.toFixed(2)
+    });
+}
+
 function dibujarLienzo() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Suelo oscuro en vez de blanco
-    ctx.beginPath(); ctx.moveTo(0, 180); ctx.lineTo(canvas.width, 180);
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.2)"; // <--- LÍNEA CAMBIADA
-    ctx.lineWidth = 2; ctx.stroke();
+    // Suelo
+    ctx.beginPath();
+    ctx.moveTo(0, 180);
+    ctx.lineTo(canvas.width, 180);
+    ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
 
     dibujarEsfera(esferaA);
     dibujarEsfera(esferaB);
 }
 
 function dibujarEsfera(esfera) {
-    ctx.beginPath(); ctx.arc(esfera.x, esfera.y, esfera.radio, 0, Math.PI * 2);
-    ctx.fillStyle = esfera.color; ctx.fill();
+    ctx.beginPath();
+    ctx.arc(esfera.x, esfera.y, esfera.radio, 0, Math.PI * 2);
+    ctx.fillStyle = esfera.color;
+    ctx.fill();
+
     // Brillo 3D
-    ctx.beginPath(); ctx.arc(esfera.x - 10, esfera.y - 10, esfera.radio / 4, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(255, 255, 255, 0.4)"; ctx.fill();
+    ctx.beginPath();
+    ctx.arc(esfera.x - 10, esfera.y - 10, esfera.radio / 4, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.4)";
+    ctx.fill();
 }
 
 function actualizarFisica() {
@@ -89,28 +105,24 @@ function actualizarFisica() {
 
     let distancia = Math.abs(esferaA.x - esferaB.x);
 
-    // ¿Las esferas se están acercando?
     let acercandose = false;
     if (esferaA.x < esferaB.x && esferaA.vel > esferaB.vel) acercandose = true;
     if (esferaA.x > esferaB.x && esferaA.vel < esferaB.vel) acercandose = true;
 
-    // COLISIÓN CON COEFICIENTE DE RESTITUCIÓN
+    // COLISIÓN
     if (distancia <= esferaA.radio + esferaB.radio && acercandose) {
-
         let inputCoef = document.getElementById("coeficiente");
         let e = inputCoef ? parseFloat(inputCoef.value) : 1;
+        if (isNaN(e)) e = 1;
 
-        // Conservación del Momento Total (p)
         let pTotal = (esferaA.masa * esferaA.vel) + (esferaB.masa * esferaB.vel);
 
-        // Fórmulas de colisión aplicando "e"
         let vAFinal = (pTotal + esferaB.masa * e * (esferaB.vel - esferaA.vel)) / (esferaA.masa + esferaB.masa);
         let vBFinal = (pTotal + esferaA.masa * e * (esferaA.vel - esferaB.vel)) / (esferaA.masa + esferaB.masa);
 
         esferaA.vel = vAFinal;
         esferaB.vel = vBFinal;
 
-        // Separar visualmente si se superponen
         let superposicion = (esferaA.radio + esferaB.radio) - distancia;
         if (esferaA.x < esferaB.x) {
             esferaA.x -= superposicion / 2;
@@ -120,11 +132,10 @@ function actualizarFisica() {
             esferaB.x -= superposicion / 2;
         }
 
-        // 🔥 ¡AQUÍ GUARDAMOS EN EL HISTORIAL!
         registrarEvento("💥 Choque Central (e=" + e + ")");
     }
 
-    // Rebote en las paredes
+    // Rebote Paredes
     let chocoPared = false;
     if (esferaA.x - esferaA.radio <= 0 || esferaA.x + esferaA.radio >= canvas.width) {
         esferaA.vel *= -1;
@@ -135,7 +146,6 @@ function actualizarFisica() {
         chocoPared = true;
     }
 
-    // 🔥 GUARDAMOS EL REBOTE
     if (chocoPared) {
         registrarEvento("🧱 Rebote en Muro");
     }
@@ -144,7 +154,7 @@ function actualizarFisica() {
     v1Text.innerText = esferaA.vel.toFixed(2);
     v2Text.innerText = esferaB.vel.toFixed(2);
 
-    // Actualizar Gráfico Chart.js
+    // Actualizar Gráfico
     frameCount++;
     if (frameCount % 2 === 0) {
         arrayVelA.push(esferaA.vel); arrayVelA.shift();
@@ -160,7 +170,6 @@ function loop() {
 }
 
 // ==================== 4. CONTROLES ====================
-// ==================== CONTROLES ====================
 document.getElementById("btnSimular").addEventListener("click", () => {
     if (!simulando) {
         esferaA.masa = parseFloat(document.getElementById("m1").value);
@@ -177,7 +186,6 @@ document.getElementById("btnSimular").addEventListener("click", () => {
         simulando = true;
         document.getElementById("btnSimular").innerText = "⏸ Pausar";
 
-        // 🔥 GUARDAMOS EL INICIO
         registrarEvento("▶ Inicio Simulación");
     } else {
         simulando = false;
@@ -193,40 +201,21 @@ document.getElementById("btnReiniciar").addEventListener("click", () => {
     esferaB.x = 650; esferaB.vel = 0;
     v1Text.innerText = "0.00"; v2Text.innerText = "0.00";
 
-    // Limpiar gráfico
     arrayVelA.fill(0); arrayVelB.fill(0);
     grafica.update();
 
-    // 🔥 LIMPIAMOS EL HISTORIAL COMPLETAMENTE
     historialEventos = [];
-
     dibujarLienzo();
 });
 
-// Arrancar motor
-dibujarLienzo();
-loop();
-
-// ==================== 5. SISTEMA DE HISTORIAL ====================
-let historialEventos = [];
-
-function registrarEvento(nombreEvento) {
-    historialEventos.push({
-        evento: nombreEvento,
-        vA: esferaA.vel.toFixed(2),
-        vB: esferaB.vel.toFixed(2)
-    });
-}
-
-// Escuchar el clic en el gráfico de Chart.js
+// ==================== 5. HISTORIAL & MODAL ====================
 document.getElementById('graficoVelocidad').addEventListener('click', () => {
     const tbody = document.getElementById('bodyHistorial');
-    tbody.innerHTML = ''; // Limpiar tabla
+    tbody.innerHTML = '';
 
     if (historialEventos.length === 0) {
         tbody.innerHTML = '<tr><td colspan="3">Aún no hay colisiones registradas. ¡Inicia la simulación!</td></tr>';
     } else {
-        // Llenar tabla con el historial
         historialEventos.forEach(ev => {
             tbody.innerHTML += `<tr>
                 <td style="font-weight:bold;">${ev.evento}</td>
@@ -235,7 +224,6 @@ document.getElementById('graficoVelocidad').addEventListener('click', () => {
             </tr>`;
         });
     }
-    // Abrir Modal
     document.getElementById('modalHistorial').classList.add('activo');
 });
 
@@ -243,7 +231,7 @@ function cerrarModal() {
     document.getElementById('modalHistorial').classList.remove('activo');
 }
 
-// ==================== 6. VALIDACIÓN DE ENTRADA EN TIEMPO REAL ====================
+// ==================== 6. VALIDACIÓN EN TIEMPO REAL ====================
 const inputCoeficiente = document.getElementById("coeficiente");
 const errorCoeficiente = document.getElementById("errorCoeficiente");
 const botonSimular = document.getElementById("btnSimular");
@@ -251,19 +239,18 @@ const botonSimular = document.getElementById("btnSimular");
 inputCoeficiente.addEventListener("input", () => {
     let valor = parseFloat(inputCoeficiente.value);
 
-    // Si el valor es menor a 0, mayor a 1, o si el usuario borró todo y quedó vacío
     if (valor < 0 || valor > 1 || isNaN(valor)) {
-        // Mostrar error rojo
         errorCoeficiente.style.display = "block";
-        // Apagar el botón de inicio
         botonSimular.disabled = true;
         botonSimular.style.opacity = "0.5";
         botonSimular.style.cursor = "not-allowed";
     } else {
-        // Todo está bien, ocultar error y encender botón
         errorCoeficiente.style.display = "none";
         botonSimular.disabled = false;
         botonSimular.style.opacity = "1";
         botonSimular.style.cursor = "pointer";
     }
 });
+
+// Iniciar el ciclo de animación (Game Loop)
+loop();

@@ -1,18 +1,10 @@
 :root {
     --bg-light: #f4f6f8;
-    /* Fondo gris muy claro casi blanco */
     --card-bg: rgba(255, 255, 255, 0.85);
-    /* Tarjetas blancas con transparencia */
     --accent-rosa: #e11d48;
-    /* Rosa un poco más oscuro para fondo blanco */
     --accent-cian: #0284c7;
-    /* Azul/Cian oscuro para contraste */
     --text-main: #1e293b;
-    /* Texto oscuro principal */
     --text-muted: #64748b;
-    /* Texto secundario gris */
-    --accent-purple: #9333ea;
-    /* Morado/Púrpura para contraste */
     --fuente: 'Nunito', sans-serif;
 }
 
@@ -27,10 +19,9 @@ body {
     background-color: var(--bg-light);
     color: var(--text-main);
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
     min-height: 100vh;
-    /* Un degradado muy sutil y limpio */
     background: radial-gradient(circle at top, #ffffff 0%, #e2e8f0 100%);
     padding: 20px 0;
 }
@@ -49,7 +40,6 @@ body {
     font-size: 2.5rem;
     color: var(--text-main);
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.05);
-    /* Sombra muy sutil */
 }
 
 /* Navegación SPA */
@@ -119,7 +109,6 @@ body {
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 16px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
-    /* Sombra elegante */
     overflow: hidden;
     display: flex;
     justify-content: center;
@@ -195,11 +184,46 @@ canvas {
     font-size: 1.1rem;
 }
 
-/* Botones y Gráfico */
+/* Panel Central */
 .acciones-panel {
     display: flex;
     flex-direction: column;
     gap: 10px;
+}
+
+.input-group-coeficiente {
+    background: rgba(0, 0, 0, 0.03);
+    padding: 12px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #e2e8f0;
+}
+
+.input-group-coeficiente label {
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: var(--text-main);
+}
+
+.input-group-coeficiente input {
+    width: 100px;
+    padding: 6px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    text-align: center;
+    font-weight: bold;
+    background: #ffffff;
+}
+
+.error-msg {
+    color: #e11d48;
+    font-size: 0.8rem;
+    font-weight: bold;
+    display: none;
+    text-align: center;
 }
 
 .btn-primario {
@@ -239,9 +263,10 @@ canvas {
     background: #ffffff;
     border-radius: 10px;
     padding: 10px;
-    margin-top: 10px;
+    margin-top: 5px;
     flex-grow: 1;
     border: 1px solid #e2e8f0;
+    height: 160px;
 }
 
 /* Teoría */
@@ -282,6 +307,7 @@ canvas {
 
 .card-teoria h3 {
     color: var(--text-main);
+    margin-bottom: 10px;
 }
 
 .formula {
@@ -305,40 +331,18 @@ canvas {
     border: 1px dashed #cbd5e1;
 }
 
-.neon-purple {
-    border-left: 4px solid var(--accent-purple);
-}
-
-.neon-purple-lateral {
-    border-left: 4px solid var(--accent-purple);
-}
-
-footer {
-    position: fixed;
-    bottom: 0;
-    width: 100vw;
-    text-align: center;
-    justify-content: center;
-    margin-top: 20px;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    background-color: var(--card-bg);
-    padding: 10px;
-    border-radius: 10px;
-}
-
-/* --- Footer --- */
+/* Footer */
 .footer-clinico {
     text-align: center;
     padding: 20px;
-    margin-top: 20px;
+    margin-top: auto;
     color: var(--text-muted);
     font-size: 0.95rem;
     border-top: 1px solid rgba(0, 0, 0, 0.05);
     width: 100%;
 }
 
-/* --- Modal del Historial --- */
+/* Modal del Historial */
 .modal-overlay {
     position: fixed;
     top: 0;
@@ -346,7 +350,6 @@ footer {
     right: 0;
     bottom: 0;
     background: rgba(15, 23, 42, 0.4);
-    /* Fondo oscuro transparente */
     backdrop-filter: blur(5px);
     display: none;
     justify-content: center;
@@ -399,7 +402,6 @@ footer {
     transform: scale(1.1);
 }
 
-/* --- Tabla de Historial --- */
 .table-container {
     max-height: 300px;
     overflow-y: auto;
